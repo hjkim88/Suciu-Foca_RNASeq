@@ -26,6 +26,11 @@ makeRDA <- function(rCntDir="C:/Research/CUMC/Suciu-Foca_RNASeq/data/",
     install.packages("xlsx")
     require(xlsx, quietly = TRUE)
   }
+  if(!require(DESeq2, quietly = TRUE)) {
+    source("https://bioconductor.org/biocLite.R")
+    biocLite("DESeq2")
+    require(DESeq2, quietly = TRUE)
+  }
   
   ### get raw count files
   f <- list.files(path = rCntDir, pattern = "\\.txt$")
@@ -66,14 +71,40 @@ makeRDA <- function(rCntDir="C:/Research/CUMC/Suciu-Foca_RNASeq/data/",
                                  stringsAsFactors = FALSE, check.names = FALSE)
   
   ### make sample info with the info file
-  sample_info <- matrix("", ncol(raw_counts), 3)
+  sample_info <- matrix("", ncol(raw_counts), 4)
   rownames(sample_info) <- colnames(raw_counts)
-  colnames(sample_info) <- c("Condition", "Time_Point", "Batch")
+  colnames(sample_info) <- c("Condition", "Time_Point", "Batch", "Technical_Replicates")
   sample_info[,"Condition"] <- rep(c("Untreated", "Low_Concentration", "High_Concentration"), 6)
   sample_info[,"Time_Point"] <- c(rep("24", 6), rep("6", 6), rep("12", 6))
   sample_info[,"Batch"] <- c(rep("Batch1", 6), rep("Batch2", 12))
+  sample_info[,"Technical_Replicates"] <- c(rep(c("T1", "T2", "T3"), 2), rep(c("T4", "T5", "T6"), 2), rep(c("T7", "T8", "T9"), 2))
+  
+  ### sum up the counts for the same technical replicates
+  deSeqData <- DESeqDataSetFromMatrix(countData=raw_counts, colData=sample_info, design= ~1)
+  deSeqData <- collapseReplicates(deSeqData, factor(sample_info[,"Technical_Replicates"]))
+  collapsed_raw_counts <- counts(deSeqData)
+  
+  ### make new sample info for the collapsed raw counts
+  collapsed_sample_info <- matrix("", ncol(collapsed_raw_counts), 3)
+  rownames(collapsed_sample_info) <- colnames(collapsed_raw_counts)
+  colnames(collapsed_sample_info) <- c("Condition", "Time_Point", "Batch")
+  collapsed_sample_info[,"Condition"] <- rep(c("Untreated", "Low_Concentration", "High_Concentration"), 3)
+  collapsed_sample_info[,"Time_Point"] <- c(rep("24", 3), rep("6", 3), rep("12", 3))
+  collapsed_sample_info[,"Batch"] <- c(rep("Batch1", 3), rep("Batch2", 6))
+  
+  ### set README function
+  README <- function() {
+    writeLines(paste(rep("#", 100), collapse = ""))
+    writeLines("The \"raw_counts\" and \"sample_info\" are for original raw counts,")
+    writeLines("and the \"collapsed_raw_counts\" and \"collapsed_sample_info\" are")
+    writeLines("for summed-up version of the original ones.")
+    writeLines("Because there are technical replicates, raw counts of the same replicates are")
+    writeLines("summed up by using collapseReplicates() function of DESeq2 package.")
+    writeLines(paste(rep("#", 100), collapse = ""))
+  }
   
   ### save the raw counts and sample info as one RDA file
-  save(list = c("raw_counts", "sample_info"), file = paste0(rCntDir, "raw_counts_suciu-foca.rda"))
+  save(list = c("raw_counts", "sample_info", "collapsed_raw_counts", "collapsed_sample_info", "README"),
+       file = paste0(rCntDir, "raw_counts_suciu-foca.rda"))
   
 }
