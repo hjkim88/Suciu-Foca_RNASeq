@@ -18,8 +18,8 @@
 
 # * All he raw count txt files for each sample should be located under the "rCntDir"
 
-makeRDA <- function(rCntDir="C:/Research/CUMC/Suciu-Foca_RNASeq/data/",
-                    sampleInfoPath="C:/Research/CUMC/Suciu-Foca_RNASeq/data/samples_matrix.xlsx") {
+makeRDA <- function(rCntDir="//isilon.c2b2.columbia.edu/ifs/archive/shares/bisr/suciu_foca/data/raw_counts_only/",
+                    sampleInfoPath="//isilon.c2b2.columbia.edu/ifs/archive/shares/bisr/suciu_foca/data/samples_matrix.xlsx") {
   
   ### load library
   if(!require(xlsx, quietly = TRUE)) {
