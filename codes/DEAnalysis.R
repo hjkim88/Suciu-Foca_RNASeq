@@ -10,6 +10,8 @@
 #   2. High concentration vs Untreated (Paired)
 #   3. Low concentration vs Untreated (Unpaired)
 #   4. High concentration vs Untreated (Unpaired)
+#   5. High + Low concentration vs Untreated (Paired)
+#   6. High concentration vs Low concentration (Paired)
 #
 #   Instruction
 #               1. Source("DEAnalysis.R")
@@ -280,7 +282,7 @@ dea <- function(rCntPath="//isilon.c2b2.columbia.edu/ifs/archive/shares/bisr/suc
               sheetName = "DE_Result", row.names = FALSE)
   ### draw a volcano plot
   volPlotWithDeseq(deresult, outputFilePath = paste0(outputDir, "Volcano_Plot_DESeq2_Low_Concentration_vs_Untreated_Paired.png"),
-                   src = "DESeq", fdr = 0.05, lfc = 0)
+                   src = "DESeq", fdr = 0.05, lfc = 0.3)
   
   
   ### DE analysis - 2. High concentration vs Untreated (Paired)
@@ -298,7 +300,7 @@ dea <- function(rCntPath="//isilon.c2b2.columbia.edu/ifs/archive/shares/bisr/suc
               sheetName = "DE_Result", row.names = FALSE)
   ### draw a volcano plot
   volPlotWithDeseq(deresult, outputFilePath = paste0(outputDir, "Volcano_Plot_DESeq2_High_Concentration_vs_Untreated_Paired.png"),
-                   src = "DESeq", fdr = 0.05, lfc = 0)
+                   src = "DESeq", fdr = 0.05, lfc = 0.3)
   
   
   ### DE analysis - 3. Low concentration vs Untreated (Unpaired)
@@ -316,7 +318,7 @@ dea <- function(rCntPath="//isilon.c2b2.columbia.edu/ifs/archive/shares/bisr/suc
               sheetName = "DE_Result", row.names = FALSE)
   ### draw a volcano plot
   volPlotWithDeseq(deresult, outputFilePath = paste0(outputDir, "Volcano_Plot_DESeq2_Low_Concentration_vs_Untreated_Unpaired.png"),
-                   src = "DESeq", fdr = 0.05, lfc = 0)
+                   src = "DESeq", fdr = 0.05, lfc = 0.3)
   
   
   ### DE analysis - 4. High concentration vs Untreated (Unpaired)
@@ -334,6 +336,48 @@ dea <- function(rCntPath="//isilon.c2b2.columbia.edu/ifs/archive/shares/bisr/suc
               sheetName = "DE_Result", row.names = FALSE)
   ### draw a volcano plot
   volPlotWithDeseq(deresult, outputFilePath = paste0(outputDir, "Volcano_Plot_DESeq2_High_Concentration_vs_Untreated_Unpaired.png"),
-                   src = "DESeq", fdr = 0.05, lfc = 0)
+                   src = "DESeq", fdr = 0.05, lfc = 0.3)
+  
+  
+  ### DE analysis - 5. High + Low concentration vs Untreated (Paired)
+  
+  ### DE analysis with DESeq2
+  deresult <- deseqWithComparisons(rCnt = collapsed_raw_counts,
+                                   grp = sapply(collapsed_sample_info[,"Condition"], function(x) {
+                                                 if(grepl("_", x)) {
+                                                   return("Concentration")
+                                                 } else {
+                                                   return(x)
+                                                 }
+                                               }),
+                                   exp_class = "Concentration", ctrl_class = "Untreated",
+                                   bat_eff = collapsed_sample_info[,"Time_Point"],
+                                   thresh = 1)
+  ### write out the DE result tables
+  write.xlsx2(data.frame(Gene_Symbol=rownames(deresult), deresult,
+                         stringsAsFactors = FALSE, check.names = FALSE),
+              file = paste0(outputDir, "DE_Result_DESeq2_All_Concentration_vs_Untreated_Paired.xlsx"),
+              sheetName = "DE_Result", row.names = FALSE)
+  ### draw a volcano plot
+  volPlotWithDeseq(deresult, outputFilePath = paste0(outputDir, "Volcano_Plot_DESeq2_All_Concentration_vs_Untreated_Paired.png"),
+                   src = "DESeq", fdr = 0.05, lfc = 0.3)
+  
+  
+  ### DE analysis - 6. High concentration vs Low concentration (Paired)
+  
+  ### DE analysis with DESeq2
+  deresult <- deseqWithComparisons(rCnt = collapsed_raw_counts,
+                                   grp = collapsed_sample_info[,"Condition"],
+                                   exp_class = "High_Concentration", ctrl_class = "Low_Concentration",
+                                   bat_eff = collapsed_sample_info[,"Time_Point"],
+                                   thresh = 1)
+  ### write out the DE result tables
+  write.xlsx2(data.frame(Gene_Symbol=rownames(deresult), deresult,
+                         stringsAsFactors = FALSE, check.names = FALSE),
+              file = paste0(outputDir, "DE_Result_DESeq2_High_vs_Low_Concentration_Paired.xlsx"),
+              sheetName = "DE_Result", row.names = FALSE)
+  ### draw a volcano plot
+  volPlotWithDeseq(deresult, outputFilePath = paste0(outputDir, "Volcano_Plot_DESeq2_High_vs_Low_Concentration_Paired.png"),
+                   src = "DESeq", fdr = 0.05, lfc = 0.3)
   
 }
