@@ -3,7 +3,7 @@
 #   Author    : Hyunjin Kim
 #   Date      : Jan 9, 2020
 #   Email     : hk2990@cumc.columbia.edu
-#   Purpose   : Run PCA and to find possible confounding factors
+#   Purpose   : Run PCA and TSNE and to find possible confounding factors
 #
 #   Instruction
 #               1. Source("IdentifyingConfoundingFactors.R")
